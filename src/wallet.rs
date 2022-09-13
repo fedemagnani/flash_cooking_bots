@@ -1,3 +1,4 @@
+//Creates a local wallet
 use anyhow::{Context, Result};
 use hex::ToHex;
 use secp256k1::SecretKey;

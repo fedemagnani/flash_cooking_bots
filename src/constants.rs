@@ -1,3 +1,4 @@
+// U256 is a struct
 use web3::types::U256;
 
 pub(crate) const ZERO_U256: U256 = U256([0_u64, 0_u64, 0_u64, 0_u64]);

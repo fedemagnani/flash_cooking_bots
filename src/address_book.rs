@@ -1,4 +1,4 @@
-// Address constants for deployed solidity contracts
+// Address constants for deployed solidity contracts (multicall, pools, blacklistedpools)
 
 // Bot Contracts
 // TODO(Figure out how to include these as pre-parsed web3::types::Address/H160s)

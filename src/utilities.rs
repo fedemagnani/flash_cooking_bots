@@ -43,7 +43,7 @@ pub fn to_gwei(wei: &web3::types::U256) -> BigDecimal {
     wei / ether
 }
 
-/// Get the present nonce for an address
+/// Get the present nonce for an address (counting the number of transactions it sent up to that point)
 pub async fn nonce(public_key: &Address, transport: &Web3<WebSocket>) -> U256 {
     transport
         .eth()
@@ -83,6 +83,7 @@ pub async fn generate_contract_transaction(
     let estimated_gas = if estimate_gas {
         let estimated_gas = contract
             .estimate_gas(
+                //quote the gas consumption of the transaction
                 func,
                 params.clone(),
                 *account,
@@ -117,7 +118,7 @@ pub async fn generate_contract_transaction(
         // This is mainly for miner bribe txs
         U256::from(200001_u64)
     };
-    gas_price = Some(miner_payment / (estimated_gas / 90 * 100));
+    gas_price = Some(miner_payment / (estimated_gas / 90 * 100)); //fixes the miner_payment as hexogenous variable and derive the gas price by dividing it with the estimated gas consumption (indeed, miner_payment = gas_consumption * gas_price)
     let data: web3::types::Bytes = contract
         .abi()
         .function(func)
@@ -148,7 +149,7 @@ pub struct Transaction {
     // Because estimated_gas is not the same as parameters.gas_limit
     pub estimated_gas: U256,
     pub parameters: TransactionParameters,
-    pub signed: Option<SignedTransaction>,
+    pub signed: Option<SignedTransaction>, //if the transaction is signed then by unwrapping the transaction you will have the signedtransaction, otherwhise you don't have it
 }
 
 impl Transaction {

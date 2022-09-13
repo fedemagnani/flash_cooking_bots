@@ -81,6 +81,8 @@ impl MulticallHeader {
     }
 
     pub fn encode(&self) -> U256 {
+        //returns a bytes mask that is interpreted by Multicall.sol in order to know which instructions must be followed
+        //such instructions will be followed for every call in the vector of multicalls
         // Let's start with zero
         let mut encoded = U256::from(0);
         // Let's set the flags
@@ -90,13 +92,14 @@ impl MulticallHeader {
         if self.burn_gastoken {
             encoded += U256::from(4);
         }
-        encoded += U256::from(self.desired_block).shl(64);
+        encoded += U256::from(self.desired_block).shl(64); //<<64 that corresponds to *(2^64)
         encoded += U256::from(self.eth_to_coinbase).shl(128);
         encoded
     }
 }
 
 pub(crate) struct Multicall {
+    //makes Multicall visible within the current crate
     header: MulticallHeader,
     calls: Vec<Call>,
 }
@@ -109,14 +112,15 @@ impl Multicall {
     // This should take the multicall header and a vector of calls
     pub fn encode_parameters(&self) -> Vec<U256> {
         let padding: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
-        let mut params: Vec<U256> = vec![self.header.encode()];
-        // TODO(Break this out into a function)
+        let mut params: Vec<U256> = vec![self.header.encode()]; //encode the values present in MulticallHeader (initiated with new())
+                                                                // TODO(Break this out into a function)
         for call in self.calls.iter() {
             // Build and encode call header bytes
+            //for each call, we build the header of the i-th call encoding method-padding-smartcontractaddress
             let mut call_header: Vec<u8> = vec![];
-            call_header.extend_from_slice(&call.header.method);
-            call_header.extend_from_slice(&padding);
-            call_header.extend_from_slice(&call.header.target.0);
+            call_header.extend_from_slice(&call.header.method); //append values present in CallHeader.method
+            call_header.extend_from_slice(&padding); //add some zeros
+            call_header.extend_from_slice(&call.header.target.0); //append the address of the smart contract, Recall that Address is a H160, which is a tuple on one element
 
             let call_type: U256;
             match call.header.call_type {
