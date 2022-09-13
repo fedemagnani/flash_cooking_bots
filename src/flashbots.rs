@@ -161,7 +161,8 @@ impl Bundle {
             .to_string()
         };
         let fb_req_sig_header = format!(
-            "{}:{}",
+            //Use format for string interpolation
+            "{}:{}", //public key: hash
             &flashbots_signer.address(),
             sign_body(&fb_req.to_string(), &flashbots_signer.private_key) //sign the JSON serde with the flashbots private key
         );
