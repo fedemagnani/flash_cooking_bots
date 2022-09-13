@@ -5,3 +5,4 @@
 **gas.rs** build the tier list of gas prices from mempool. If it has problems to do so, it queries the gas prices to the node
 **utilities.rs** has several util functions (well commented), also for generating and signing transactions (not for sending them)
 **wallet.rs** crate for creating a local wallet (keypair of public and private) given a private key (omitting 0x)
+**flashbots.rs** it has the Bundle structure and via submit() you're capable of sending or simulating a certain bundle. In both cases you perform a rpc call to the uri endpoint of the relayer and you hash the content of such rpc call (via sign_body()). This hash is set at the header "X-Flashbots-Signature" in the form of "your_flashbot_public_key:hash_signed_with_your_flashbot_pvt_key" and the body of this request is the rpc_call ({"jsonrpc":"2.0"}) 

@@ -78,6 +78,7 @@ impl Bundle {
     pub fn taken_profit(&self) -> U256 {
         let mut taken_profit = constants::ZERO_U256;
         for transaction in &self.transactions {
+            //In utilities you have the key "taken_profit" for the struct Transaction
             taken_profit += transaction.taken_profit;
         }
         taken_profit
@@ -90,6 +91,7 @@ impl Bundle {
     }
 
     pub fn miner_payment(&self) -> U256 {
+        //payment to mayner is given by the series of coinbases transfers (made by each transactions) + the series of gas fees (gas used by the i-th transaction * gas price paid by i-th transaction: recall that transactions consume different gas and so they may pay different gas prices in order to have an "equal contribution" by each transaction)
         let mut delta_coinbase = constants::ZERO_U256;
         let mut gas_payment = constants::ZERO_U256;
         for transaction in &self.transactions {
@@ -144,7 +146,7 @@ impl Bundle {
             // TODO(Add support for optional parameters)
             serde_json::json!({
    "jsonrpc": "2.0",
-   "method": "eth_callBundle",
+   "method": "eth_callBundle", //relayer has this custom method for SIMULATING bundles
    "params": [{"txs": raw_transactions, "blockNumber": BlockNumber::from(self.block + 1_u64), "stateBlockNumber": BlockNumber::from(self.block)}],
    "id": 1}).to_string()
         } else {
@@ -153,7 +155,7 @@ impl Bundle {
             // TODO(Add support for optional parameters)
             serde_json::json!({
        "jsonrpc": "2.0",
-       "method": "eth_sendBundle",
+       "method": "eth_sendBundle", //relayer has this custom method for RECEIVING bundles
        "params": [{"txs": raw_transactions, "blockNumber": BlockNumber::from(self.block + 1_u64)}],
        "id": 1})
             .to_string()
@@ -161,15 +163,15 @@ impl Bundle {
         let fb_req_sig_header = format!(
             "{}:{}",
             &flashbots_signer.address(),
-            sign_body(&fb_req.to_string(), &flashbots_signer.private_key)
+            sign_body(&fb_req.to_string(), &flashbots_signer.private_key) //sign the JSON serde with the flashbots private key
         );
         // TODO(Add goerli testnet support)
         debug!("X-Flashbots-Signature: {}", fb_req_sig_header);
         debug!("Request JSON: {}", &fb_req);
-        let mut req: surf::Request = surf::post(relay).build();
-        req.set_header("X-Flashbots-Signature", &fb_req_sig_header);
+        let mut req: surf::Request = surf::post(relay).build(); //You specify the uri of the relayer you want to router your bundle to miner
+        req.set_header("X-Flashbots-Signature", &fb_req_sig_header); //Put the header X-Flashbots-Signature and sets its value as the previous jsonrpc call (that contains the raw transactions) encrypted via flashbots private key
         req.set_content_type(JSON);
-        req.set_body(fb_req);
+        req.set_body(fb_req); //send in clear the previous jsonrpc call: in this way the relayer might be able to hash this call and checks that it is equal to X-Flashbots-Signature
         let res = client.send(req);
         let mut res = res.await.unwrap();
         let body = res.body_string().await.unwrap();
