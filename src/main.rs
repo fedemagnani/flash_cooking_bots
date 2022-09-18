@@ -7,6 +7,7 @@ use bundle_generator::Config;
 fn main() {
     // Setup Logger
     // No timestamps because systemd does that already.
+    // bundle_generator corresponds to lib.rs
     env_logger::builder().format_timestamp(None).init();
     let config = Config::new().unwrap_or_else(|err| {
         error!("Problem reading environment: {}", err);

@@ -50,7 +50,7 @@ impl Market for WethEthMarket {
     }
 
     fn protocol(&self) -> Protocol {
-        Protocol::ERC20
+        Protocol::ERC20 //different crates in order to have different implementations specifying different protocols
     }
 
     fn miner_reward_percentage(&self) -> Option<U256> {

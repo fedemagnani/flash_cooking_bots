@@ -23,6 +23,7 @@ pub struct CethEthMarket {
 
 impl CethEthMarket {
     pub fn new(transport: &Web3<WebSocket>) -> CethEthMarket {
+        //use the websocket in order to retrieve the bytecode of the contract, interpreted then via the ABI
         let eth: Address = address_book::ETH_ADDRESS.parse().unwrap();
         let ceth: Address = address_book::CETH_ADDRESS.parse().unwrap();
         let ceth_contract = Contract::from_json(
@@ -30,8 +31,8 @@ impl CethEthMarket {
             ceth,
             include_bytes!("protocols/compound/ceth.json"),
         )
-        .unwrap();
-        let bundle_executor: Address = address_book::MulticallEXECUTOR.parse().unwrap();
+        .unwrap(); //create instance of cETH contract
+        let bundle_executor: Address = address_book::MulticallEXECUTOR.parse().unwrap(); //set the address of the MulticzllExecutor in the structure
         CethEthMarket {
             tokens: TokenPair { i: eth, j: ceth },
             bundle_executor,
@@ -47,9 +48,9 @@ impl CethEthMarket {
         self.exchange_rate = self
             .ceth
             .query::<U256, _, _, _>(
-                "exchangeRateCurrent",
+                "exchangeRateCurrent", //probably the name of the method is now exchangeRateStored
                 (),
-                self.bundle_executor,
+                self.bundle_executor, //make calls via the multicallexecutor contract
                 Default::default(),
                 BlockId::from(BlockNumber::Pending),
             )

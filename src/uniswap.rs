@@ -27,6 +27,7 @@ pub struct Router {
 
 impl Router {
     pub fn new(address: Address, transport: &web3::Web3<WebSocket>) -> Router {
+        //initiate the contract instance of uniswapv2 router
         let contract: Contract<WebSocket> = Contract::from_json(
             transport.eth(),
             address,
@@ -38,6 +39,7 @@ impl Router {
 
     /// Uses Uniswap v2 getAmountsOut to get the price in weth of a token.
     pub async fn get_price_wei(self, token: &Address) -> U256 {
+        //caller of getAmountOut; requests onchain the amountsout, probably when there isn't the straightforward pool
         // TODO(Make this more robust)
         let path = vec![
             *token,
@@ -59,6 +61,7 @@ impl Router {
 
 #[derive(Clone, Debug)]
 pub struct UniswapV2Pair {
+    //in order to create the instance of a univ2 pool
     uniswap_interface: Contract<WebSocket>,
     eth: Eth<WebSocket>,
     token_balances: HashMap<Address, U256>,
@@ -69,6 +72,7 @@ pub struct UniswapV2Pair {
 
 impl UniswapV2Pair {
     pub fn new(
+        //initiate univ2 pool instance
         transport: &Web3<WebSocket>,
         market_address: Address,
         tokens: TokenPair,
@@ -94,6 +98,7 @@ impl UniswapV2Pair {
     }
 
     pub fn get_amount_in(reserve_in: &U256, reserve_out: &U256, amount_out: &U256) -> U256 {
+        //deterministically compute amountin
         if reserve_out < amount_out {
             // Catch overflow
             return constants::ZERO_U256;
@@ -107,6 +112,7 @@ impl UniswapV2Pair {
     }
 
     pub fn get_amount_out(reserve_in: &U256, reserve_out: &U256, amount_in: &U256) -> U256 {
+        //deterministically compute amountin
         // TODO(Seems like we could do this better, this will lose data with large amounts)
         let amount_in_with_fee = amount_in * 997;
         let numerator = amount_in_with_fee * reserve_out;
@@ -128,7 +134,7 @@ impl UniswapV2Pair {
         let par_batch_markets = Arc::new(Mutex::new(&mut batch_markets));
         let batch_pairs = query_interface
             .query::<Vec<Vec<Address>>, _, _, _>(
-                "getPairsByIndexRange",
+                "getPairsByIndexRange", //fetch token0 and token1 of multiple reserves via a custom contract: FlashBotsUniswapQuery (0x5EF1009b9FCD4fec3094a5564047e190D72Bd511)
                 (*factory_address, start, stop),
                 None,
                 Options::default(),
@@ -144,6 +150,7 @@ impl UniswapV2Pair {
                 let market_address = pair[2];
                 let i = pair[0];
                 let j = pair[1];
+                //push the pairs into the array par_batch_markets if the pool is not blacklisted and if both tokens are not blacklisted
                 for token in address_book::BLACKLISTED_TOKENS.iter() {
                     // TODO(Make this faster by figuring out how to store all the addresses as constants)
                     // Also, could use hashmap here

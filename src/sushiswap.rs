@@ -27,7 +27,7 @@ impl MasterChef {
     pub async fn pending_reward_balance(&self, pid: U256, address: Address) -> U256 {
         self.contract
             .query::<U256, _, _, _>(
-                "pendingSushi",
+                "pendingSushi", //check the rewards in sushi that must be claimed from a certain liquidity provider for a specific pool (pid)
                 (pid, address),
                 None,
                 Options::default(),
